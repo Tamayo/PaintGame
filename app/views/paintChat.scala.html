@@ -1,0 +1,62 @@
+@* paintChat Template File *@
+@(Title: String)
+
+@main("Paint-The Game"){
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-6">
+				<ul class="nav nav-tabs">
+					<li class="active"><a href="#Game1" data-toggle="tab">Game 1</a></li>
+					<li><a href="#Game2" data-toggle="tab">Game 2</a></li>
+					<li><a href="#Game3" data-toggle="tab">Game 3</a></li>
+				</ul>
+			</div>
+			<div class="col-md-6">
+				<ul class="nav nav-tabs">
+					<li class="active"><a href="#ChatBox" data-toggle="tab">Chat</a></li>
+					<li><a href="#PastGames" data-toggle="tab">Past Games</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6">
+				<div class="tab-content">
+				  <div class="tab-pane active" id="Game1">Game 1</div>
+				  <div class="tab-pane" id="Game2">Game 2</div>
+				  <div class="tab-pane" id="Game3">Game 3</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="tab-content">
+				  <div class="tab-pane active panel panel-default" id="ChatBox">
+				  	<div class="panel-body">
+				  		<dl id="insertChat" class="dl-horizontal" style="overflow-y:scroll; height:300px"></dl>
+				  	</div>
+				  	<div class="panel-footer">
+				  		<input type="text" id="talk"/>
+				  		<button class="btn btn-default" type="button" id="submitTalk">Submit</button>
+				  	</div>
+				  </div>
+				  <div class="tab-pane" id="PastGames">...5</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="startModal" tabindex="-1" data-backdrop="static" role="dialog" aria-labelledby="startModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h4 class="modal-title" id="startModalLabel">Paint: The Game</h4>
+	      </div>
+	      <div class="modal-body">
+	        <p>Enter a Username to being playing Paint!</p>
+	        <input type="text" id="userInput"/>
+	        <button type="button" id="checkUser" class="btn btn-primary">Check Username</button>
+	      </div>
+	      <div class="modal-footer">
+	        
+	      </div>
+	    </div>
+	  </div>
+	</div>
+}
