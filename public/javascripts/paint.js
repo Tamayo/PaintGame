@@ -23,24 +23,41 @@ $(function() {
         $("#talk").val('')
     }
     
+    //Data will contain initial game state Upon joining a game
+    var handleConnect = function(data){
+    	
+    }
+    
+    //Displays Join Message to group, and Updates list of Members of Group
     var handleJoin = function(data){
     	$('#insertChat').append('<dt class="text-success">'+data.type+'</dt><dd class="text-success">'+ data.user +' '+data.message+'</dd>');;
     	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
     }
     
+    //Displays Users Vote to Group
     var handleVote = function(data){
     	$('#insertChat').append('<dt>'+data.type+'</dt><dd>'+ data.user +' '+data.message+'</dd>');
     	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
     }
     
+    //Displays Users Guess/Chat to Group
     var handleGuess = function(data){
     	$('#insertChat').append('<dt>'+data.user+'</dt><dd>'+data.message+'</dd>');
     	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
     }
     
+    //Updates list of Members of group, and posts Quit Message
     var handleQuit = function(data){
     	$('#insertChat').append('<dt class="text-danger">'+data.type+'</dt><dd class="text-success">'+ data.user +' '+data.message+'</dd>');
     	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
+    }
+    
+    /*
+     * Will be called every time the canvas is updated by drawer,
+     * and will contain all data needed to update a Client Canvas 
+    */
+    var handleUpdate = function(data){
+    	
     }
     
     var toggleState = function(data){
@@ -59,6 +76,7 @@ $(function() {
         //Case Success - Joined Chat Successfully, release Modal
         case "Success":
         	$('#startModal').modal('toggle');
+        	handleConnect(data);
         	break;
         //Case Join - Announce in chat new user has joined
         case "Join":
@@ -76,8 +94,13 @@ $(function() {
         case "Quit":
         	handleQuit(data);
         	break;
+        //Case StateChange - Toggles Between Guess mode and Vote mode for Client
         case "StateChange":
         	toggleState(data);
+        	break;
+        //Case Update - Updates Client canvas 
+        case "Update":
+        	handleUpdate(data);
         	break;
         }
     }
