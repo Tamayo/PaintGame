@@ -20,7 +20,7 @@ public class MessageParser<A> implements Callback<A>  {
 		JsonNode node = (JsonNode)event;
 		 String messageType = node.get("type").asText();
         //Checks Message type and sends appropriate message to actorOf
-		 System.out.println(messageType);
+		 //System.out.println(messageType);
 		 
 		 switch(messageType){
 			 case "Guess":

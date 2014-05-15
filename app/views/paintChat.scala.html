@@ -39,12 +39,21 @@
 				<div class="tab-content">
 				  <div class="tab-pane active panel panel-default" id="ChatBox">
 				  	<div class="panel-body">
-				  		<dl id="insertChat" class="dl-horizontal" style="overflow-y:scroll; height:300px"></dl>
+				  		<div class="row">
+				  			<dl id="insertChat" class="dl-horizontal" style="overflow-y:scroll; height:300px"></dl>
+				  		</div>
 				  	</div>
 				  	<div class="panel-footer">
 				  		<input type="text" id="talk"/>
 				  		<button class="btn btn-default" type="button" id="submitTalk">Submit</button>
 				  	</div>
+				  </div>
+				  <div class="row">
+				  	<ul>
+				  		<li>Members</li>
+				  		<ul id="insertMembers" style="overflow-y:scroll; height:100px">
+					  	</ul>
+				  	</ul>
 				  </div>
 				  <div class="tab-pane" id="PastGames">...5</div>
 				</div>

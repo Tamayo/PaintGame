@@ -127,6 +127,12 @@ $(function() {
     var handleJoin = function(data){
     	$('#insertChat').append('<dt class="text-success">'+data.type+'</dt><dd class="text-success">'+ data.user +' '+data.message+'</dd>');;
     	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
+    	$('#insertMembers').html("");
+    	 $(data.members).each(function() {
+             var li = document.createElement('li');
+             li.textContent = this;
+             $("#insertMembers").append(li);
+         })
     }
     
     //Displays Users Vote to Group
@@ -145,6 +151,12 @@ $(function() {
     var handleQuit = function(data){
     	$('#insertChat').append('<dt class="text-danger">'+data.type+'</dt><dd class="text-success">'+ data.user +' '+data.message+'</dd>');
     	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
+    	$('#insertMembers').html("");
+    	$(data.members).each(function() {
+            var li = document.createElement('li');
+            li.textContent = this;
+            $("#insertMembers").append(li);
+        })
     }
     
     /*

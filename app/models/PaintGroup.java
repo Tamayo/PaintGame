@@ -155,13 +155,11 @@ public class PaintGroup extends UntypedActor {
         }
         else if(message instanceof Init)
         {
-        	System.out.println("Init Sending");
         	Init init = (Init)message;
         	askForCanvas(init.user);
         }
         else if(message instanceof InitRequest)
         {
-        	System.out.println("Init Request Recieved,sending to user");
         	InitRequest initreq = (InitRequest)message;
         	sendCanvas(initreq.user,initreq.imageData);
         }
@@ -201,7 +199,6 @@ public class PaintGroup extends UntypedActor {
         	}
         }
         else {
-        	
             unhandled(message);
         }
         
@@ -220,7 +217,33 @@ public class PaintGroup extends UntypedActor {
     	}
     	else
     	{
-    		this.notifyAll("Guess","New Artist"," is the new Artist");
+    		String mostName = "";
+    		int mostNum = 0;
+    		for(String name: votes.keySet())
+    		{
+    			int val = votes.get(name);
+    			System.out.println("Name: " + name + " Votes: " + val);
+    			if(val>mostNum)
+    			{
+    				mostName = name;
+    				mostNum = val;
+    			}
+    		}
+    		if(!mostName.equals(""))
+    		{
+    			votes.clear();
+    			selectNewDraw(1);
+    		}
+    		else
+    		{
+    			votes.clear();
+    			drawMan = mostName;
+    			WebSocket.Out<JsonNode> newDraw = members.get(drawMan);
+        		ObjectNode event = Json.newObject();
+        		event.put("type","YouDrawNow");
+        		newDraw.write(event);
+        		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
+    		}
     	}
     	
     }
