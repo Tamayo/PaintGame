@@ -1,6 +1,7 @@
 $(function() {
 	//Variables Required for Client
 	var state = "Guess";
+	var canDraw = 0;
 	var currentGroup = 1;
     var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
     var chatSocket; 
@@ -64,14 +65,16 @@ $(function() {
         
         // bind mouse events
         canvas.node.onmousemove = function(e) {
-            if (!canvas.isDrawing) {
-               return;
-            }
-            var x = e.pageX - this.offsetLeft;
-            var y = e.pageY - this.offsetTop - 50;
-            var radius = 10; // or whatever
-            ctx.fillCircle(x, y, radius, fillColor);
-            paintUpdateToServ(x,y,fillColor);
+        	if(canDraw == 1){
+	            if (!canvas.isDrawing) {
+	               return;
+	            }
+	            var x = e.pageX - this.offsetLeft;
+	            var y = e.pageY - this.offsetTop - 50;
+	            var radius = 10; // or whatever
+	            ctx.fillCircle(x, y, radius, fillColor);
+	            paintUpdateToServ(x,y,fillColor);
+        	}
         };
         canvas.node.onmousedown = function(e) {
             canvas.isDrawing = true;
@@ -89,6 +92,9 @@ $(function() {
         
     //Data will contain initial game state Upon joining a game
     var handleConnect = function(data){
+    	$('#UserModal').text("Connected, Waiting for Init");
+    	canDraw = data.canDraw;
+    	state= data.mode;
     	messageToServ("","InitRequest");
     }
     
@@ -97,13 +103,23 @@ $(function() {
     	var imgdata =ctx.createImageData(400,400);
     	imgdata.data.set(new Uint8ClampedArray(data.init));
     	ctx.putImageData(imgdata,0,0);
+    	$('#startModal').modal('toggle');
     }
     
     var handleInitRequest = function(data){
     	console.info("Init Request Recieved");
-    	chatSocket.send(JSON.stringify(
-                {type: "Init",user: data.user,message: ctx.getImageData(0,0,400,400).data}
-            ));
+    	if(data.user == name)
+    	{
+    		console.info("Self, No Init Needed");
+    		$('#startModal').modal('toggle');
+    	}
+    	else
+    	{
+    		chatSocket.send(JSON.stringify(
+                    {type: "Init",user: data.user,message: ctx.getImageData(0,0,400,400).data}
+                ));
+    	}
+    	
     	//messageToServ(ctx.getImageData(0,0,400,400).data,"Init");
     }
     
@@ -161,8 +177,11 @@ $(function() {
         switch(data.type){
         //Case Success - Joined Chat Successfully, release Modal
         case "Success":
-        	$('#startModal').modal('toggle');
         	handleConnect(data);
+        	break;
+        	
+        case "YouDrawNow":
+        	canDraw = 1;
         	break;
         //Case Init - Initializes Canvas
         case "Init":

@@ -1,11 +1,8 @@
 package models;
 
 import play.mvc.*;
-
-
 import play.libs.*;
 import play.libs.F.*;
-
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 import akka.actor.*;
@@ -17,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 
 
+
 import java.util.*;
 
 import static java.util.concurrent.TimeUnit.*;
@@ -24,11 +22,15 @@ import static java.util.concurrent.TimeUnit.*;
 //Actor that that will control each group
 public class PaintGroup extends UntypedActor {
     
-	String drawMan="Cris";
+	volatile String drawMan;
+	volatile boolean voteMode = false;
     // Groups
     static ActorRef defaultRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef secondRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef thirdRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
+    
+    ActorRef myVoter = Akka.system().actorOf(Props.create(PaintGroup.class));
+    
     
     /**
      * Join the default room.
@@ -50,6 +52,7 @@ public class PaintGroup extends UntypedActor {
         String result = (String)Await.result(ask(roomToJoin,new Join(username, out), 1000), Duration.create(1, SECONDS));
         final ActorRef joinedRoom = roomToJoin;
         if("OK".equals(result)) {
+        	
             in.onMessage(new MessageParser<JsonNode>(roomToJoin,username));
             in.onClose(new Callback0() {
                public void invoke() {
@@ -59,9 +62,7 @@ public class PaintGroup extends UntypedActor {
                    
                }
             });
-            ObjectNode notifySuccess = Json.newObject();
-            notifySuccess.put("type","Success");
-            out.write(notifySuccess);
+            joinedRoom.tell(new Success(username), null);
             
         } else {
             
@@ -89,6 +90,10 @@ public class PaintGroup extends UntypedActor {
             if(members.containsKey(join.username)) {
                 getSender().tell("Name is already used, try another name", getSelf());
             } else {
+            	if(!isDrawing())
+            	{
+            		this.drawMan = join.username;
+            	}
                 members.put(join.username, join.channel);
                 notifyAll("Join", join.username, "has entered the room");
                 getSender().tell("OK", getSelf());
@@ -109,8 +114,12 @@ public class PaintGroup extends UntypedActor {
             Quit quit = (Quit)message;
             
             members.remove(quit.username);
-            
             notifyAll("Quit", quit.username, "has left the room");
+            if(this.drawMan == quit.username)
+            {
+            	drawMan = null;
+            	getSelf().tell(new initiateVote(), null);
+            }
         
         } 
         else if(message instanceof Vote)
@@ -135,10 +144,65 @@ public class PaintGroup extends UntypedActor {
         	InitRequest initreq = (InitRequest)message;
         	sendCanvas(initreq.user,initreq.imageData);
         }
+        else if(message instanceof Success)
+        {
+        	Success succ = (Success)message;
+        	ObjectNode notifySuccess = Json.newObject();
+            notifySuccess.put("type","Success");
+            if(this.drawMan == succ.user)
+            {
+            	notifySuccess.put("canDraw", 1);
+            }
+            else
+            {
+            	notifySuccess.put("canDraw", 0);
+            }
+            notifySuccess.put("mode", "Guess");
+            WebSocket.Out<JsonNode> out = members.get(succ.user);
+            out.write(notifySuccess);
+        }
+        else if(message instanceof endVote)
+        {
+        	this.voteMode = false;
+        	this.selectNewDraw();
+        }
+        else if(message instanceof initiateVote)
+        {
+        	if(members.size()==1)
+        	{
+        		this.selectNewDraw();
+        	}
+        	else if(members.size() > 1)
+        	{
+	        	this.voteMode = true;
+	        	this.myVoter.tell(message, this.getSelf());
+        	}
+        }
         else {
             unhandled(message);
         }
         
+    }
+    
+    public void selectNewDraw()
+    {
+    	if(members.size()>0)
+    	{
+    		this.drawMan = members.keySet().iterator().next();
+    		WebSocket.Out<JsonNode> newDraw = members.get(this.drawMan);
+    		ObjectNode event = Json.newObject();
+    		event.put("type","YouDrawNow");
+    		newDraw.write(event);
+    		this.notifyAll("Guess","New DrawMan",drawMan+" is the new Artist");
+    	}
+    	
+    }
+    
+    public boolean isDrawing()
+    {
+    	if(this.drawMan == null)
+    		return false;
+    	return true;
     }
     
     public void sendCanvas(String user, JsonNode imageData)
@@ -197,10 +261,11 @@ public class PaintGroup extends UntypedActor {
         }
     }
     
-    public void giveWord(String topic,String word, String user)
+    public void giveWord(String type,String topic,String word, String user)
     {
     	WebSocket.Out<JsonNode> userOut = members.get(user);
     	ObjectNode wordObject = Json.newObject();
+    	wordObject.put("type",type);
     	wordObject.put("topic",topic);
     	wordObject.put("user",user);
     	wordObject.put("word",word);
@@ -263,6 +328,12 @@ public class PaintGroup extends UntypedActor {
         }
         
     }
+    public static class initiateVote{
+    	
+    }
+    public static class endVote{
+    	
+    }
     public static class InitRequest{
     	final String user;
     	final JsonNode imageData;
@@ -272,6 +343,15 @@ public class PaintGroup extends UntypedActor {
     		imageData = node;
     	}
     }
+    
+    public static class Success{
+    	final String user;
+    	public Success(String name)
+    	{
+    		user = name;
+    	}
+    }
+    
     public static class Init {
     	final String user;
     	public Init(String name)
