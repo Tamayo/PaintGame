@@ -164,6 +164,11 @@ $(function() {
     
     var toggleState = function(data){
     	state = data.message;
+    	if(data.message == "Vote")
+    	{
+	    	$('#insertChat').append('<dt>'+"Vote Initiated"+'</dt><dd>'+"Enter Vote for new Artist"+'</dd>');
+	    	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
+    	}
     }
 
     var receiveEvent = function(event) {

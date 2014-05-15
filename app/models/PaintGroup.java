@@ -24,12 +24,13 @@ public class PaintGroup extends UntypedActor {
     
 	volatile String drawMan;
 	volatile boolean voteMode = false;
+	Map<String, Integer> votes = new HashMap<String,Integer>();
     // Groups
     static ActorRef defaultRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef secondRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef thirdRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     
-    ActorRef myVoter = Akka.system().actorOf(Props.create(PaintGroup.class));
+    ActorRef myVoter = Akka.system().actorOf(Props.create(VoteHandel.class));
     
     
     /**
@@ -125,7 +126,27 @@ public class PaintGroup extends UntypedActor {
         else if(message instanceof Vote)
         {
         	Vote vote = (Vote)message;
-        	notifyAll("Vote",vote.username,"voted for " + vote.vote);
+        	String myVote = vote.vote;
+        	if(voteMode)
+        	{
+        		if(members.containsKey(myVote))
+        		{
+        			if(votes.containsKey(myVote))
+        			{
+        				votes.replace(myVote, votes.get(myVote)+1);
+        			}
+        			else
+        			{
+        				votes.put(myVote, 1);
+        			}
+        			notifyAll("Vote",vote.username,"voted for " + vote.vote);
+        		}
+        		else
+        		{
+        			notifyAll("Vote",vote.username,"had an Invalid Vote");
+        		}
+        	}
+        	
         }
         else if(message instanceof Update)
         {
@@ -164,36 +185,42 @@ public class PaintGroup extends UntypedActor {
         else if(message instanceof endVote)
         {
         	this.voteMode = false;
-        	this.selectNewDraw();
+        	this.selectNewDraw(-1);
         }
         else if(message instanceof initiateVote)
         {
         	if(members.size()==1)
         	{
-        		this.selectNewDraw();
+        		this.selectNewDraw(1);
         	}
         	else if(members.size() > 1)
         	{
-	        	this.voteMode = true;
-	        	this.myVoter.tell(message, this.getSelf());
+	        	voteMode = true;
+	        	myVoter.tell(message, this.getSelf());
+	        	notifyAll("StateChange","New Vote Started","Vote");
         	}
         }
         else {
+        	
             unhandled(message);
         }
         
     }
     
-    public void selectNewDraw()
+    public void selectNewDraw(int size)
     {
-    	if(members.size()>0)
+    	if(size==1)
     	{
     		this.drawMan = members.keySet().iterator().next();
     		WebSocket.Out<JsonNode> newDraw = members.get(this.drawMan);
     		ObjectNode event = Json.newObject();
     		event.put("type","YouDrawNow");
     		newDraw.write(event);
-    		this.notifyAll("Guess","New DrawMan",drawMan+" is the new Artist");
+    		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
+    	}
+    	else
+    	{
+    		this.notifyAll("Guess","New Artist"," is the new Artist");
     	}
     	
     }
