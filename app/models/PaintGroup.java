@@ -24,6 +24,7 @@ import static java.util.concurrent.TimeUnit.*;
 //Actor that that will control each group
 public class PaintGroup extends UntypedActor {
     
+	String drawMan="Cris";
     // Groups
     static ActorRef defaultRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef secondRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
@@ -122,10 +123,45 @@ public class PaintGroup extends UntypedActor {
         	Update update = (Update)message;
         	updateAll(update.user,"Update",update.x,update.y,update.color);
         }
+        else if(message instanceof Init)
+        {
+        	System.out.println("Init Sending");
+        	Init init = (Init)message;
+        	askForCanvas(init.user);
+        }
+        else if(message instanceof InitRequest)
+        {
+        	System.out.println("Init Request Recieved,sending to user");
+        	InitRequest initreq = (InitRequest)message;
+        	sendCanvas(initreq.user,initreq.imageData);
+        }
         else {
             unhandled(message);
         }
         
+    }
+    
+    public void sendCanvas(String user, JsonNode imageData)
+    {
+    	WebSocket.Out<JsonNode> channel = members.get(user);
+    	ObjectNode event = Json.newObject();
+    	event.put("type","Init");
+    	ArrayNode imageArray =event.putArray("init");
+    	Iterator<JsonNode> iter = imageData.elements();
+    	while(iter.hasNext())
+    	{
+    		imageArray.add(iter.next().asInt());
+    	}
+    	channel.write(event);
+    }
+    
+    public void askForCanvas(String user)
+    {
+    	WebSocket.Out<JsonNode> channel = members.get(drawMan);
+    	ObjectNode event = Json.newObject();
+    	event.put("type","InitRequest");
+    	event.put("user",user);
+    	channel.write(event);
     }
     
     //Send Message too all members of current group
@@ -226,6 +262,22 @@ public class PaintGroup extends UntypedActor {
             this.username = username;
         }
         
+    }
+    public static class InitRequest{
+    	final String user;
+    	final JsonNode imageData;
+    	public InitRequest(String name,JsonNode node)
+    	{
+    		user = name;
+    		imageData = node;
+    	}
+    }
+    public static class Init {
+    	final String user;
+    	public Init(String name)
+    	{
+    		user=name;
+    	}
     }
     
 }

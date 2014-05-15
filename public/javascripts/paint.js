@@ -31,6 +31,9 @@ $(function() {
     }
     
     ////Canvas Handler
+    //
+    
+    
     function createCanvas(parent, width, height) {
         var canvas = {};
         canvas.node = document.createElement('canvas');
@@ -42,7 +45,7 @@ $(function() {
     }
     
     	var container = document.getElementById('Game1');
-    	var fillColor = '#ddd'
+    	var fillColor = '#ff0000'
         var canvas = createCanvas(container, 400, 400);
         var ctx = canvas.context;
         // define a custom fillCircle method
@@ -57,7 +60,7 @@ $(function() {
             ctx.fillStyle = fillColor;
             ctx.fillRect(0, 0, 400, 400);
         };
-        ctx.clearTo(fillColor || "#ddd");
+        ctx.clearTo("#ddd");
         
         // bind mouse events
         canvas.node.onmousemove = function(e) {
@@ -67,7 +70,6 @@ $(function() {
             var x = e.pageX - this.offsetLeft;
             var y = e.pageY - this.offsetTop - 50;
             var radius = 10; // or whatever
-            var fillColor = '#ff0000';
             ctx.fillCircle(x, y, radius, fillColor);
             paintUpdateToServ(x,y,fillColor);
         };
@@ -78,12 +80,31 @@ $(function() {
             canvas.isDrawing = false;
         };
         
+        $(".colorChanger").click(function(){
+        	fillColor = $(this).attr('id');
+        });
      ///End Canvas Handeler
     
     
+        
     //Data will contain initial game state Upon joining a game
     var handleConnect = function(data){
-    	
+    	messageToServ("","InitRequest");
+    }
+    
+    var handleInit = function(data){
+    	console.info("Init Recieved");
+    	var imgdata =ctx.createImageData(400,400);
+    	imgdata.data.set(new Uint8ClampedArray(data.init));
+    	ctx.putImageData(imgdata,0,0);
+    }
+    
+    var handleInitRequest = function(data){
+    	console.info("Init Request Recieved");
+    	chatSocket.send(JSON.stringify(
+                {type: "Init",user: data.user,message: ctx.getImageData(0,0,400,400).data}
+            ));
+    	//messageToServ(ctx.getImageData(0,0,400,400).data,"Init");
     }
     
     //Displays Join Message to group, and Updates list of Members of Group
@@ -121,7 +142,6 @@ $(function() {
     	}
     	else
     	{
-    		console.info("Should be updating");
     		 ctx.fillCircle(data.x, data.y, 10, data.color);
     	}
     }
@@ -143,6 +163,14 @@ $(function() {
         case "Success":
         	$('#startModal').modal('toggle');
         	handleConnect(data);
+        	break;
+        //Case Init - Initializes Canvas
+        case "Init":
+        	handleInit(data);
+        	break;
+        //Case InitRequest - Sends Current canvas state to Server
+        case "InitRequest":
+        	handleInitRequest(data);
         	break;
         //Case Join - Announce in chat new user has joined
         case "Join":
