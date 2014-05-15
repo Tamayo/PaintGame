@@ -4,13 +4,14 @@ $(function() {
 	var currentGroup = 1;
     var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
     var chatSocket; 
+    var name;
     
     //Makes modal appear on screen load
 	$('#startModal').modal('toggle');
     
     //Handles a New Connection to a Group, starts a new websocket to the groupNum
     $('#checkUser').click(function(){
-		var name = $('#userInput').val();
+		name = $('#userInput').val();
 		chatSocket = new WS("ws://localhost:9000/connectWS?username="+name+"&groupNum=" + currentGroup);
 		chatSocket.onmessage = receiveEvent
     });
@@ -22,6 +23,63 @@ $(function() {
         ))
         $("#talk").val('')
     }
+    
+    var paintUpdateToServ = function(X,Y,Color){
+    	chatSocket.send(JSON.stringify(
+    			{type: "Update", x: X, y: Y, color: Color}
+    	))
+    }
+    
+    ////Canvas Handler
+    function createCanvas(parent, width, height) {
+        var canvas = {};
+        canvas.node = document.createElement('canvas');
+        canvas.context = canvas.node.getContext('2d');
+        canvas.node.width = width || 100;
+        canvas.node.height = height || 100;
+        parent.appendChild(canvas.node);
+        return canvas;
+    }
+    
+    	var container = document.getElementById('Game1');
+    	var fillColor = '#ddd'
+        var canvas = createCanvas(container, 400, 400);
+        var ctx = canvas.context;
+        // define a custom fillCircle method
+        ctx.fillCircle = function(x, y, radius, fillColor) {
+            this.fillStyle = fillColor;
+            this.beginPath();
+            this.moveTo(x, y);
+            this.arc(x, y, radius, 0, Math.PI * 2, false);
+            this.fill();
+        };
+        ctx.clearTo = function(fillColor) {
+            ctx.fillStyle = fillColor;
+            ctx.fillRect(0, 0, 400, 400);
+        };
+        ctx.clearTo(fillColor || "#ddd");
+        
+        // bind mouse events
+        canvas.node.onmousemove = function(e) {
+            if (!canvas.isDrawing) {
+               return;
+            }
+            var x = e.pageX - this.offsetLeft;
+            var y = e.pageY - this.offsetTop - 50;
+            var radius = 10; // or whatever
+            var fillColor = '#ff0000';
+            ctx.fillCircle(x, y, radius, fillColor);
+            paintUpdateToServ(x,y,fillColor);
+        };
+        canvas.node.onmousedown = function(e) {
+            canvas.isDrawing = true;
+        };
+        canvas.node.onmouseup = function(e) {
+            canvas.isDrawing = false;
+        };
+        
+     ///End Canvas Handeler
+    
     
     //Data will contain initial game state Upon joining a game
     var handleConnect = function(data){
@@ -57,7 +115,15 @@ $(function() {
      * and will contain all data needed to update a Client Canvas 
     */
     var handleUpdate = function(data){
-    	
+    	if(data.user == name)
+    	{
+    		return;
+    	}
+    	else
+    	{
+    		console.info("Should be updating");
+    		 ctx.fillCircle(data.x, data.y, 10, data.color);
+    	}
     }
     
     var toggleState = function(data){
@@ -120,4 +186,5 @@ $(function() {
     	messageToServ(message,state);
     });
 
+    
 })

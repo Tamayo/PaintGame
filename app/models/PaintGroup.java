@@ -117,6 +117,11 @@ public class PaintGroup extends UntypedActor {
         	Vote vote = (Vote)message;
         	notifyAll("Vote",vote.username,"voted for " + vote.vote);
         }
+        else if(message instanceof Update)
+        {
+        	Update update = (Update)message;
+        	updateAll(update.user,"Update",update.x,update.y,update.color);
+        }
         else {
             unhandled(message);
         }
@@ -136,6 +141,21 @@ public class PaintGroup extends UntypedActor {
             for(String u: members.keySet()) {
                 m.add(u);
             }
+            
+            channel.write(event);
+        }
+    }
+    
+    public void updateAll(String user,String type, int x, int y, String color)
+    {
+        for(WebSocket.Out<JsonNode> channel: members.values()) {
+            
+            ObjectNode event = Json.newObject();
+            event.put("type", type);
+            event.put("user", user);
+            event.put("x", x);
+            event.put("y",y);
+            event.put("color", color);
             
             channel.write(event);
         }
@@ -183,6 +203,20 @@ public class PaintGroup extends UntypedActor {
     		username = name;
     		vote = newVote;
     	}
+    }
+    public static class Update{
+    	final int x;
+    	final int y;
+    	final String color;
+    	final String user;
+    	public Update(int xcord, int ycord, String fillColor, String name)
+    	{
+    		x=xcord;
+    		y=ycord;
+    		color=fillColor;
+    		user=name;
+    	}
+    	
     }
     public static class Quit {
         

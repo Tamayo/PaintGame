@@ -1,5 +1,6 @@
 package models;
 import models.PaintGroup.*;
+
 import play.libs.F.*;
 import akka.actor.*;
 
@@ -26,6 +27,8 @@ public class MessageParser<A> implements Callback<A>  {
 		 case "Vote":
 			 myRoom.tell(new Vote(username, node.get("message").asText()), null);
 			 break;
+		 case "Update":
+			 myRoom.tell(new Update(node.get("x").asInt(),node.get("y").asInt(),node.get("color").asText(),username),null);
 		 }
  	   
 	}
