@@ -133,7 +133,8 @@ public class PaintGroup extends UntypedActor {
         		{
         			if(votes.containsKey(myVote))
         			{
-        				votes.replace(myVote, votes.get(myVote)+1);
+        				int num = votes.remove(myVote);
+        				votes.put(myVote, num+1);
         			}
         			else
         			{
