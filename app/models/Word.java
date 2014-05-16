@@ -9,9 +9,6 @@ import javax.persistence.Table;
 public class Word{
 
   @Id
-  @Column(name = "wordId")
-  private String wordId;
-
   @Column(name="word")
   private String word;
 
@@ -20,12 +17,10 @@ public class Word{
   }
 
   public Word(String word){
-    this.wordId = word;
     this.word = word;
   }
 
   public void setWord(String word){
-    this.wordId = word;
     this.word = word;
   }
 
