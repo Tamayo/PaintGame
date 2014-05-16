@@ -154,6 +154,11 @@ $(function() {
     
     var handleInit = function(data){
     	console.info("Init Recieved");
+    	if(data.fail == "fail")
+    	{
+    		$('#startModal').modal('toggle');
+    		return;
+    	}
     	var imgdata =ctx.createImageData(400,400);
     	imgdata.data.set(new Uint8ClampedArray(data.init));
     	ctx.putImageData(imgdata,0,0);

@@ -17,9 +17,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 
 
+
 import java.util.*;
 
-import models.VoteHandel;
 import static java.util.concurrent.TimeUnit.*;
 
 //Actor that that will control each group
@@ -28,19 +28,21 @@ public class PaintGroup extends UntypedActor {
 	volatile String drawMan;
 	volatile boolean voteMode = false;
 	Map<String, Integer> votes = new HashMap<String,Integer>();
+	HashSet<String> hasVoted = new HashSet<String>();
     // Groups
     static ActorRef defaultRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef secondRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     static ActorRef thirdRoom = Akka.system().actorOf(Props.create(PaintGroup.class));
     
     ActorRef myVoter = Akka.system().actorOf(Props.create(VoteHandel.class));
-    
+   // static Consensus helpMe;
     
     /**
      * Join the default room.
      */
     public static void join(final String username,final int roomNumber, WebSocket.In<JsonNode> in, WebSocket.Out<JsonNode> out) throws Exception{
-        
+        //if(helpMe == null)
+        	//helpMe = new Consensus(defaultRoom);
     	ActorRef roomToJoin = null;
     	switch (roomNumber){
     	case 1:
@@ -94,7 +96,7 @@ public class PaintGroup extends UntypedActor {
             if(members.containsKey(join.username)) {
                 getSender().tell("Name is already used, try another name", getSelf());
             } else {
-            	if(!isDrawing())
+            	if(!isDrawing() && !voteMode)
             	{
             		this.drawMan = join.username;
             	}
@@ -116,10 +118,10 @@ public class PaintGroup extends UntypedActor {
             
             // Received a Quit message
             Quit quit = (Quit)message;
-            
             members.remove(quit.username);
             notifyAll("Quit", quit.username, "has left the room");
-            if(this.drawMan == quit.username)
+            System.out.println("Current Leader: " + drawMan + " Me: " + quit.username);
+            if(drawMan != null && drawMan.equals(quit.username))
             {
             	drawMan = null;
             	getSelf().tell(new initiateVote(), null);
@@ -131,8 +133,9 @@ public class PaintGroup extends UntypedActor {
         	String myVote = vote.vote;
         	if(voteMode)
         	{
-        		if(members.containsKey(myVote))
+        		if(members.containsKey(myVote) && !hasVoted.contains(vote.username))
         		{
+        			hasVoted.add(vote.username);
         			if(votes.containsKey(myVote))
         			{
         				int num = votes.remove(myVote);
@@ -172,7 +175,7 @@ public class PaintGroup extends UntypedActor {
         	Success succ = (Success)message;
         	ObjectNode notifySuccess = Json.newObject();
             notifySuccess.put("type","Success");
-            if(this.drawMan == succ.user)
+            if(this.drawMan == succ.user && !this.voteMode)
             {
             	notifySuccess.put("canDraw", 1);
             }
@@ -180,7 +183,14 @@ public class PaintGroup extends UntypedActor {
             {
             	notifySuccess.put("canDraw", 0);
             }
-            notifySuccess.put("mode", "Guess");
+            if(this.voteMode)
+            {
+            	notifySuccess.put("mode", "Vote");
+            }
+            else
+            {
+            	notifySuccess.put("mode", "Guess");
+            }
             String randomWord = WordController.findRandom();
         	System.out.println(randomWord);
         	notifySuccess.put("word",randomWord);
@@ -214,7 +224,14 @@ public class PaintGroup extends UntypedActor {
         {
         	System.out.println("Persisting up in this bitch");
         	Save save = (Save)message;
-        	SavedImageController.persist(save.pic, save.word);
+        	//SavedImageController.persist(save.pic, save.word);
+        }
+        else if(message instanceof CheckLeader)
+        {
+        	if(members.get(drawMan) == null && members.size()>0)
+        	{
+        		selectNewDraw(1);
+        	}
         }
         else {
             unhandled(message);
@@ -231,8 +248,16 @@ public class PaintGroup extends UntypedActor {
     		ObjectNode event = Json.newObject();
     		event.put("type","YouDrawNow");
     		event.put("word",WordController.findRandom());
-    		newDraw.write(event);
-    		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
+    		if(newDraw != null)
+    		{
+	    		newDraw.write(event);
+	    		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
+	    		
+    		}
+    		else if(members.size()>0)
+    		{
+    			selectNewDraw(1);
+    		}
     	}
     	else
     	{
@@ -248,21 +273,30 @@ public class PaintGroup extends UntypedActor {
     				mostNum = val;
     			}
     		}
-    		if(!mostName.equals(""))
+    		if(mostName.equals(""))
     		{
+    			hasVoted.clear();
     			votes.clear();
     			selectNewDraw(1);
     		}
     		else
     		{
+    			hasVoted.clear();
     			votes.clear();
     			drawMan = mostName;
     			WebSocket.Out<JsonNode> newDraw = members.get(drawMan);
         		ObjectNode event = Json.newObject();
         		event.put("type","YouDrawNow");
         		event.put("word",WordController.findRandom());
-        		newDraw.write(event);
-        		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
+        		if(newDraw!= null)
+        		{
+	        		newDraw.write(event);
+	        		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
+        		}
+        		else
+        		{
+        			selectNewDraw(1);
+        		}
     		}
     	}
     	
@@ -286,7 +320,10 @@ public class PaintGroup extends UntypedActor {
     	{
     		imageArray.add(iter.next().asInt());
     	}
-    	channel.write(event);
+    	if(channel != null)
+    	{
+    		channel.write(event);
+    	}
     }
     
     public void askForCanvas(String user)
@@ -295,7 +332,16 @@ public class PaintGroup extends UntypedActor {
     	ObjectNode event = Json.newObject();
     	event.put("type","InitRequest");
     	event.put("user",user);
-    	channel.write(event);
+    	if(channel != null)
+    	{
+    		channel.write(event);
+    	}
+    	else
+    	{
+    		ObjectNode justGO = Json.newObject();
+    		justGO.put("fail","fail");
+    		sendCanvas(user,justGO);
+    	}
     }
     
     //Send Message too all members of current group
@@ -311,8 +357,10 @@ public class PaintGroup extends UntypedActor {
             for(String u: members.keySet()) {
                 m.add(u);
             }
-            
-            channel.write(event);
+            if(channel != null)
+            {
+            	channel.write(event);
+            }
         }
     }
     
@@ -326,8 +374,10 @@ public class PaintGroup extends UntypedActor {
             event.put("x", x);
             event.put("y",y);
             event.put("color", color);
-            
-            channel.write(event);
+            if(channel != null)
+            {
+            	channel.write(event);
+            }
         }
     }
     
@@ -441,6 +491,10 @@ public class PaintGroup extends UntypedActor {
     		this.word = word;
     		pic = node;
     	}
+    }
+    public static class CheckLeader
+    {
+    	
     }
     
 }
