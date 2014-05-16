@@ -181,6 +181,11 @@ $(function() {
 	    	$('#insertChat').append('<dt>'+"Vote Initiated"+'</dt><dd>'+"Enter Vote for new Artist"+'</dd>');
 	    	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
     	}
+    	if(data.message == "Guess")
+    	{
+    		$('#insertChat').append('<dt>'+"Vote Finished"+'</dt><dd>'+"Waiting for Vote Result"+'</dd>');
+	    	$('#insertChat').scrollTop($('#insertChat')[0].scrollHeight);
+    	}
     }
 
     var receiveEvent = function(event) {

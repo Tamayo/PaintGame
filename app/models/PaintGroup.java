@@ -184,6 +184,7 @@ public class PaintGroup extends UntypedActor {
         else if(message instanceof endVote)
         {
         	this.voteMode = false;
+        	notifyAll("StateChange","Vote Has Ended","Guess");
         	this.selectNewDraw(-1);
         }
         else if(message instanceof initiateVote)
