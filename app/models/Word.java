@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 @Entity
 @Table(name = "words", schema = "PaintGame@cassandra_pu")
 public class Word{
+
   @Id
   @Column(name = "wordId")
   @GeneratedValue(strategy = GenerationType.TABLE)
