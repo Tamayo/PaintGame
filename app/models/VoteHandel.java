@@ -1,11 +1,10 @@
 package models;
 
 
+import controllers.PaintGroup;
 import play.libs.*;
 import scala.concurrent.duration.*;
 import akka.actor.*;
-
-
 import static java.util.concurrent.TimeUnit.*;
 
 public class VoteHandel extends UntypedActor {

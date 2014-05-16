@@ -1,4 +1,4 @@
-package models;
+package controllers;
 
 import play.mvc.*;
 import play.libs.*;
@@ -7,7 +7,7 @@ import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 import akka.actor.*;
 import static akka.pattern.Patterns.ask;
-import controllers.WordController;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,8 +15,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 
 
+
+
 import java.util.*;
 
+import models.VoteHandel;
 import static java.util.concurrent.TimeUnit.*;
 
 //Actor that that will control each group
@@ -41,15 +44,12 @@ public class PaintGroup extends UntypedActor {
     	ActorRef roomToJoin = null;
     	switch (roomNumber){
     	case 1:
-    		System.out.println("Default");
     		roomToJoin = defaultRoom;
     		break;
     	case 2:
-    		System.out.println("2");
     		roomToJoin = secondRoom;
     		break;
     	case 3:
-    		System.out.println("3");
     		roomToJoin = thirdRoom;
     		break;
     	}
@@ -65,6 +65,7 @@ public class PaintGroup extends UntypedActor {
                    
                }
             });
+            System.out.println("Dafuq");
             joinedRoom.tell(new Success(username), null);
             
         } else {
@@ -167,19 +168,22 @@ public class PaintGroup extends UntypedActor {
         }
         else if(message instanceof Success)
         {
+        	System.out.println("Success");
         	Success succ = (Success)message;
         	ObjectNode notifySuccess = Json.newObject();
             notifySuccess.put("type","Success");
             if(this.drawMan == succ.user)
             {
             	notifySuccess.put("canDraw", 1);
-            	notifySuccess.put("word",WordController.findRandom());
             }
             else
             {
             	notifySuccess.put("canDraw", 0);
             }
             notifySuccess.put("mode", "Guess");
+            String randomWord = WordController.findRandom();
+        	System.out.println(randomWord);
+        	notifySuccess.put("word",randomWord);
             WebSocket.Out<JsonNode> out = members.get(succ.user);
             out.write(notifySuccess);
         }
@@ -206,6 +210,12 @@ public class PaintGroup extends UntypedActor {
         {
         	notifyAll("Clear","","");
         }
+        else if(message instanceof Save)
+        {
+        	System.out.println("Persisting up in this bitch");
+        	Save save = (Save)message;
+        	SavedImageController.persist(save.pic, save.word);
+        }
         else {
             unhandled(message);
         }
@@ -220,6 +230,7 @@ public class PaintGroup extends UntypedActor {
     		WebSocket.Out<JsonNode> newDraw = members.get(this.drawMan);
     		ObjectNode event = Json.newObject();
     		event.put("type","YouDrawNow");
+    		event.put("word",WordController.findRandom());
     		newDraw.write(event);
     		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
     	}
@@ -249,6 +260,7 @@ public class PaintGroup extends UntypedActor {
     			WebSocket.Out<JsonNode> newDraw = members.get(drawMan);
         		ObjectNode event = Json.newObject();
         		event.put("type","YouDrawNow");
+        		event.put("word",WordController.findRandom());
         		newDraw.write(event);
         		this.notifyAll("Guess","New Artist",drawMan+" is the new Artist");
     		}
@@ -419,6 +431,16 @@ public class PaintGroup extends UntypedActor {
     
     public static class Clear{
     	
+    }
+    
+    public static class Save{
+    	final String word;
+    	final JsonNode pic;
+    	public Save(String word, JsonNode node)
+    	{
+    		this.word = word;
+    		pic = node;
+    	}
     }
     
 }

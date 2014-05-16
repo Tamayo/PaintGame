@@ -2,8 +2,8 @@ package controllers;
 
 import play.mvc.*;
 
-
 import com.fasterxml.jackson.databind.JsonNode; 
+
 import views.html.*;
 import models.*;
 
@@ -19,7 +19,6 @@ public class Application extends Controller {
     	return ok(paintChat.render(""));
     }
     public static WebSocket<JsonNode> connectWS(final String username, final int groupNum) {
-    	System.out.println("Ayyy");
         return new WebSocket<JsonNode>() {
             
             // Called when the Websocket Handshake is done.

@@ -10,7 +10,7 @@ http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
  <properties>
  <property name="kundera.nodes" value="pi.cs.oswego.edu"/>
  <property name="kundera.port" value="21237"/>
- <property name="kundera.keyspace" value="PaintGame"/>
+ <property name="kundera.keyspace" value="paintgameXX"/>
  <property name="kundera.dialect" value="cassandra"/>
  <property name="kundera.client.lookup.class" value="com.impetus.client.cassandra.thrift.ThriftClientFactory" />
  <property name="kundera.cache.provider.class" value="com.impetus.kundera.cache.ehcache.EhCacheProvider"/>

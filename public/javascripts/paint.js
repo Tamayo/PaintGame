@@ -6,6 +6,7 @@ $(function() {
     var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
     var chatSocket; 
     var name;
+    var drawWord;
     
     //Makes modal appear on screen load
 	$('#startModal').modal('toggle');
@@ -25,8 +26,15 @@ $(function() {
 	    	ctx.clearTo("#ddd");
 	    	chatSocket.close();
 	    	$('#insertChat').html("");
+	    	$('#word').html('');
 	    	$('#UserModal').text("Enter a Username to Join the Group");
     	}
+    });
+    
+    $('#save').click(function(){
+    		chatSocket.send(JSON.stringify(
+                    {type: "Save",word: drawWord,message: ctx.getImageData(0,0,400,400).data}
+                ));
     });
     
     $('#Game2').click(function(){
@@ -37,6 +45,7 @@ $(function() {
 	    	ctx.clearTo("#ddd");
 	    	chatSocket.close();
 	    	$('#insertChat').html("");
+	    	$('#word').html('');
 	    	$('#UserModal').text("Enter a Username to Join the Group");
     	}
     });
@@ -48,6 +57,7 @@ $(function() {
 	    	ctx.clearTo("#ddd");
 	    	chatSocket.close();
 	    	$('#insertChat').html("");
+	    	$('#word').html('');
 	    	$('#UserModal').text("Enter a Username to Join the Group");
     	}
     });
@@ -133,6 +143,11 @@ $(function() {
     var handleConnect = function(data){
     	$('#UserModal').text("Connected, Waiting for Init");
     	canDraw = data.canDraw;
+    	if(canDraw == 1)
+    	{
+    		drawWord = data.word;
+    		$('#word').html('<span class="label label-default">You should Draw: '+data.word+'</span>');
+    	}
     	state= data.mode;
     	messageToServ("","InitRequest");
     }
@@ -243,6 +258,8 @@ $(function() {
         	
         case "YouDrawNow":
         	canDraw = 1;
+        	drawWord = data.word;
+    		$('#word').html('<span class="label label-default">You should Draw: '+data.word+'</span>');
         	break;
         //Case Init - Initializes Canvas
         case "Init":

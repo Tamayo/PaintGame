@@ -7,7 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 
 @Entity
-@Table(name = "words", schema = "PaintGame@cassandra_pu")
+@Table(name = "words", schema = "PaintGameXX@cassandra_pu")
 public class Word{
 
   @Id

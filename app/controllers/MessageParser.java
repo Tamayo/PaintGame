@@ -1,10 +1,11 @@
-package models;
-import models.PaintGroup.*;
+package controllers;
 import play.libs.F.*;
 import akka.actor.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import controllers.PaintGroup.*;
 
 public class MessageParser<A> implements Callback<A>  {
 	ActorRef myRoom;
@@ -40,6 +41,9 @@ public class MessageParser<A> implements Callback<A>  {
 				 break;
 			 case "Clear":
 				 myRoom.tell(new Clear(),null);
+				 break;
+			 case "Save":
+				 myRoom.tell(new Save(node.get("word").asText(),node.get("message")),null);
 				 break;
 		 }
  	   
