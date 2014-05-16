@@ -6,6 +6,8 @@
 GET     /                           controllers.Application.index()
 GET     /paintChat                  controllers.Application.paintChat()
 GET     /connectWS                       controllers.Application.connectWS(username:String,groupNum:Int)
+GET     /testWord                   controllers.WordController.persist(word: String)
+GET     /getWords                   controllers.WordController.findAll()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
