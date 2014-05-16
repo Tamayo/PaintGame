@@ -7,7 +7,7 @@ import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 import akka.actor.*;
 import static akka.pattern.Patterns.ask;
-
+import controllers.WordController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -173,6 +173,7 @@ public class PaintGroup extends UntypedActor {
             if(this.drawMan == succ.user)
             {
             	notifySuccess.put("canDraw", 1);
+            	notifySuccess.put("word",WordController.findRandom());
             }
             else
             {
@@ -318,12 +319,11 @@ public class PaintGroup extends UntypedActor {
         }
     }
     
-    public void giveWord(String type,String topic,String word, String user)
+    public void giveWord(String type,String word, String user)
     {
     	WebSocket.Out<JsonNode> userOut = members.get(user);
     	ObjectNode wordObject = Json.newObject();
     	wordObject.put("type",type);
-    	wordObject.put("topic",topic);
     	wordObject.put("user",user);
     	wordObject.put("word",word);
     	userOut.write(wordObject);

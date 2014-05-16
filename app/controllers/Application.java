@@ -19,6 +19,7 @@ public class Application extends Controller {
     	return ok(paintChat.render(""));
     }
     public static WebSocket<JsonNode> connectWS(final String username, final int groupNum) {
+    	System.out.println("Ayyy");
         return new WebSocket<JsonNode>() {
             
             // Called when the Websocket Handshake is done.

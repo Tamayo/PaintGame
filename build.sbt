@@ -4,7 +4,9 @@ version := "1.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   "com.impetus.client" % "kundera-cassandra" % "2.9",
-  javaCore
+  javaCore,
+  cache,
+  javaEbean
 )
 
 resolvers ++= Seq(
