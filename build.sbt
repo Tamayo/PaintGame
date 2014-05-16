@@ -4,6 +4,7 @@ version := "1.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   "com.impetus.client" % "kundera-cassandra" % "2.9",
+  "org.apache.lucene" % "lucene-core" % "4.8.0",
   javaCore,
   cache,
   javaEbean
