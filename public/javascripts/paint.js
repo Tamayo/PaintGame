@@ -17,6 +17,41 @@ $(function() {
 		chatSocket.onmessage = receiveEvent
     });
     
+    $('#Game').click(function(){
+    	if(currentGroup != 1)
+    	{
+	    	$('#startModal').modal('toggle');
+	    	currentGroup = 1;
+	    	ctx.clearTo("#ddd");
+	    	chatSocket.close();
+	    	$('#insertChat').html("");
+	    	$('#UserModal').text("Enter a Username to Join the Group");
+    	}
+    });
+    
+    $('#Game2').click(function(){
+    	if(currentGroup != 2)
+    	{
+	    	$('#startModal').modal('toggle');
+	    	currentGroup = 2;
+	    	ctx.clearTo("#ddd");
+	    	chatSocket.close();
+	    	$('#insertChat').html("");
+	    	$('#UserModal').text("Enter a Username to Join the Group");
+    	}
+    });
+    $('#Game3').click(function(){
+    	if(currentGroup != 3)
+    	{
+	    	$('#startModal').modal('toggle');
+	    	currentGroup = 3;
+	    	ctx.clearTo("#ddd");
+	    	chatSocket.close();
+	    	$('#insertChat').html("");
+	    	$('#UserModal').text("Enter a Username to Join the Group");
+    	}
+    });
+    
     //Sends Message to Server
     var messageToServ = function(Message,Type) {
         chatSocket.send(JSON.stringify(
@@ -84,6 +119,10 @@ $(function() {
         };
         
         $(".colorChanger").click(function(){
+        	if($(this).attr('id') == "clear"){
+        		messageToServ("","Clear");
+        		return;
+        	}
         	fillColor = $(this).attr('id');
         });
      ///End Canvas Handeler
@@ -236,6 +275,9 @@ $(function() {
         //Case Update - Updates Client canvas 
         case "Update":
         	handleUpdate(data);
+        	break;
+        case "Clear":
+        	ctx.clearTo("#ddd");
         	break;
         }
     }

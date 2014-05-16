@@ -21,7 +21,7 @@ import static java.util.concurrent.TimeUnit.*;
 
 //Actor that that will control each group
 public class PaintGroup extends UntypedActor {
-    
+	
 	volatile String drawMan;
 	volatile boolean voteMode = false;
 	Map<String, Integer> votes = new HashMap<String,Integer>();
@@ -41,19 +41,21 @@ public class PaintGroup extends UntypedActor {
     	ActorRef roomToJoin = null;
     	switch (roomNumber){
     	case 1:
+    		System.out.println("Default");
     		roomToJoin = defaultRoom;
     		break;
     	case 2:
+    		System.out.println("2");
     		roomToJoin = secondRoom;
     		break;
     	case 3:
+    		System.out.println("3");
     		roomToJoin = thirdRoom;
     		break;
     	}
         String result = (String)Await.result(ask(roomToJoin,new Join(username, out), 1000), Duration.create(1, SECONDS));
         final ActorRef joinedRoom = roomToJoin;
         if("OK".equals(result)) {
-        	
             in.onMessage(new MessageParser<JsonNode>(roomToJoin,username));
             in.onClose(new Callback0() {
                public void invoke() {
@@ -120,8 +122,7 @@ public class PaintGroup extends UntypedActor {
             {
             	drawMan = null;
             	getSelf().tell(new initiateVote(), null);
-            }
-        
+            }        
         } 
         else if(message instanceof Vote)
         {
@@ -199,6 +200,10 @@ public class PaintGroup extends UntypedActor {
 	        	myVoter.tell(message, this.getSelf());
 	        	notifyAll("StateChange","New Vote Started","Vote");
         	}
+        }
+        else if(message instanceof Clear)
+        {
+        	notifyAll("Clear","","");
         }
         else {
             unhandled(message);
@@ -410,6 +415,10 @@ public class PaintGroup extends UntypedActor {
     	{
     		user=name;
     	}
+    }
+    
+    public static class Clear{
+    	
     }
     
 }

@@ -26,7 +26,7 @@ public class Application extends Controller {
                 
                 // Join the chat room.
                 try { 
-                    PaintGroup.join(username, 1, in, out);
+                    PaintGroup.join(username, groupNum, in, out);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

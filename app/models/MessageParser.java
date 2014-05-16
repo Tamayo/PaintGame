@@ -38,6 +38,9 @@ public class MessageParser<A> implements Callback<A>  {
 			 case "InitRequest":
 				 myRoom.tell(new Init(username), null);
 				 break;
+			 case "Clear":
+				 myRoom.tell(new Clear(),null);
+				 break;
 		 }
  	   
 	}
