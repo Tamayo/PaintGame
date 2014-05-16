@@ -3,11 +3,11 @@ name := "PaintJava"
 version := "1.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
-  "com.impetus.client" % "kundera-cassandra" % "2.9",
-  "org.apache.lucene" % "lucene-core" % "4.8.0",
   javaCore,
   cache,
-  javaEbean
+  javaEbean,
+  "com.impetus.client" % "kundera-cassandra" % "2.9" excludeAll(ExclusionRule(organization = "org.slf4j")),
+  "org.apache.lucene" % "lucene-core" % "4.8.0"
 )
 
 resolvers ++= Seq(
